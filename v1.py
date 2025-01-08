@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import sys
-import os
 from main_gc import get_data
 
 # Add caching to prevent reloading data on every interaction
