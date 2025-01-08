@@ -7,13 +7,24 @@ from time import sleep
 
 
 def api(player, mes):
-
-    url = 'https://gamersclub.com.br/api/box/historyFilterDate/'f'{player}/{mes}'
-    request = requests.get(url)
-    request_response = request.text
-    data = json.loads(request_response)
+    url = f'https://gamersclub.com.br/api/box/historyFilterDate/{player}/{mes}'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://gamersclub.com.br/',
+    }
     
-    return data
+    request = requests.get(url, headers=headers)
+    request_response = request.text
+    
+    # Add error handling
+    try:
+        data = json.loads(request_response)
+        return data
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON response. Response content: {request_response[:200]}...")
+        raise
 
 def partidas(data):
 
