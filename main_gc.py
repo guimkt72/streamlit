@@ -13,7 +13,7 @@ def api(player, mes):
         'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9',
         'Referer': 'https://gamersclub.com.br/'
-        "Authorization": "Bearer e3623083426c51d74e915145b06b7f9d00ad036d",
+        'Authorization": "Bearer qU7FgG2mPIYyiY0PnW2SDsI6_Rt-oUdZ_GrZHQU5uOM.Ami36kSjddHX4PQm29p3hxDmDYfCUIiuU-Fw9hXosyQ',
     }
     
     request = requests.get(url, headers=headers)
