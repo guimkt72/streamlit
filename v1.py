@@ -12,6 +12,9 @@ def load_data():
             return df
         except Exception as e:
             st.error(f"Error loading data: {str(e)}")
+            # Add more detailed error logging
+            st.error(f"Error type: {type(e).__name__}")
+            st.error(f"Full error details: {e.__dict__}")
             return None
 
 # Initialize session state for data if not exists
