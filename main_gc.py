@@ -46,7 +46,7 @@ def get_data():
 
             for attempt in range(max_retries):
                 try:
-                    url = f"https://api.gamersclub.com.br/player/stats/{player['ID']}?month={mes}"
+                    url = 'https://gamersclub.com.br/api/box/historyFilterDate/'f'{player}/{mes}'
                     response = requests.get(url)
                     response.raise_for_status()  # Raise an exception for bad status codes
                     
