@@ -1,45 +1,72 @@
 import streamlit as st
 import pandas as pd
+import sys
+import os
+from main_gc import get_data
 
-# Assuming your DataFrame is already loaded (in the future from API)
-# For now, let's load it directly from Excel
-df = pd.read_excel('teste_gc.xlsx')
+# Add caching to prevent reloading data on every interaction
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def load_data():
+    # Show loading message
+    with st.spinner('Fetching data from API... This might take a minute...'):
+        try:
+            df = get_data()  # Your API function from main_gc.py
+            return df
+        except Exception as e:
+            st.error(f"Error loading data: {str(e)}")
+            return None
 
-st.title("Game Statistics Dashboard")
+# Initialize session state for data if not exists
+if 'data' not in st.session_state:
+    st.session_state.data = None
 
-# Define metrics that can be plotted
-metrics = {
-    'KDR': 'kdr',
-    'ADR': 'adr',
-    'Kills': 'matou',
-    'Deaths': 'morreu',
-    'Multi Kills': 'multikills',
-    'First Kills': 'firstkills',
-    'Headshot Rate': 'headshotrate',
-    'Bombs Planted': 'bomb_planted',
-    'Bombs Defused': 'bomb_defused',
-    'Matches Played': 'matches'
-}
+# Add a refresh button
+if st.button('Refresh Data'):
+    st.session_state.data = None
 
-# Let user select the metric to analyze with friendly names
-selected_metric_name = st.selectbox("Select metric to analyze", list(metrics.keys()))
-selected_metric = metrics[selected_metric_name]
+# Load data if not in session state
+if st.session_state.data is None:
+    st.session_state.data = load_data()
 
-# Group the data by month and player, calculating the mean of the selected metric
-grouped_df = df.groupby(['mes', 'nome'])[selected_metric].mean().reset_index()
+# Only show the dashboard if we have data
+if st.session_state.data is not None:
+    df = st.session_state.data
+    
+    st.title("Game Statistics Dashboard")
 
-# Pivot the data to create a format suitable for plotting
-pivot_df = grouped_df.pivot(index='mes', columns='nome', values=selected_metric)
+    # Define metrics that can be plotted
+    metrics = {
+        'KDR': 'kdr',
+        'ADR': 'adr',
+        'Kills': 'matou',
+        'Deaths': 'morreu',
+        'Multi Kills': 'multikills',
+        'First Kills': 'firstkills',
+        'Headshot Rate': 'headshotrate',
+        'Bombs Planted': 'bomb_planted',
+        'Bombs Defused': 'bomb_defused',
+        'Matches Played': 'matches'
+    }
 
-# Create the plot
-st.subheader(f"{selected_metric_name} by Player Over Time")
-st.line_chart(pivot_df)
+    # Let user select the metric to analyze with friendly names
+    selected_metric_name = st.selectbox("Select metric to analyze", list(metrics.keys()))
+    selected_metric = metrics[selected_metric_name]
 
-# Show summary statistics
-st.subheader("Summary Statistics")
-summary_df = df.groupby('nome')[selected_metric].agg(['mean', 'min', 'max']).round(2)
-summary_df.columns = ['Average', 'Minimum', 'Maximum']
-st.write(summary_df)
+    # Group the data by month and player, calculating the mean of the selected metric
+    grouped_df = df.groupby(['mes', 'nome'])[selected_metric].mean().reset_index()
+
+    # Pivot the data to create a format suitable for plotting
+    pivot_df = grouped_df.pivot(index='mes', columns='nome', values=selected_metric)
+
+    # Create the plot using Streamlit's native line chart
+    st.subheader(f"{selected_metric_name} by Player Over Time")
+    st.line_chart(pivot_df)
+
+    # Show summary statistics
+    st.subheader("Summary Statistics")
+    summary_df = df.groupby('nome')[selected_metric].agg(['mean', 'min', 'max']).round(2)
+    summary_df.columns = ['Average', 'Minimum', 'Maximum']
+    st.write(summary_df)
 
 # Add custom CSS
 st.markdown("""

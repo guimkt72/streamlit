@@ -3,6 +3,8 @@ import requests
 import json
 import openpyxl
 from time import sleep
+import streamlit as st
+
 
 
 
@@ -96,120 +98,148 @@ def bombas_defusadas(data):
 
     return data_bombdefused
 
+def get_data():
 
-meses =  ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11']
+    meses =  ['2024-01', '2024-02', '2024-03', '2024-04', '2024-05', '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12']
 
-players = {'players':[
+    players = {'players':[
 
-            {"name": "fnx", "ID": 8998},
-            {"name": "danoco", "ID": 133415},
-            {"name": "donkgordo", "ID": 9368},
-            {"name": "fer", "ID": 84},
-            {"name": "steelega", "ID": 52}
+                {"name": "fnx", "ID": 8998},
+                {"name": "danoco", "ID": 133415},
+                {"name": "donkgordo", "ID": 9368},
+                {"name": "fer", "ID": 84},
+                {"name": "steelega", "ID": 52}
 
-]}
+    ]}
 
-mes_lista = [] 
-id_lista = []
-nome_lista = []
-kdr_lista = []
-adr_lista = []
-matou_lista = []
-morreu_lista = []
-multikills_lista = []
-firstkills_lista = []
-headshot_list = []
-bombplanted_list = []
-bombdefused_lista = []
-matches_lista = []
+    mes_lista = [] 
+    id_lista = []
+    nome_lista = []
+    kdr_lista = []
+    adr_lista = []
+    matou_lista = []
+    morreu_lista = []
+    multikills_lista = []
+    firstkills_lista = []
+    headshot_list = []
+    bombplanted_list = []
+    bombdefused_lista = []
+    matches_lista = []
 
-contador = []
+    contador = []
 
-for mes in meses:
-    for player in players['players']:
+    progress_bar = st.progress(0)
+    total_iterations = len(meses) * len(players['players'])
+    current_iteration = 0
 
-        contador_mes = len(meses)
-        contador_player = len(players['players'])
-        total = contador_mes * contador_player
+    for mes in meses:
+        for player in players['players']:
+            current_iteration += 1
+            progress = current_iteration / total_iterations
+            progress_bar.progress(progress)
+            
+            contador_mes = len(meses)
+            contador_player = len(players['players'])
+            total = contador_mes * contador_player
 
-        contador.append(1)
+            contador.append(1)
 
-        print("Carregando" f' {len(contador)} do total de {total}')
-
-
-        name_player = player['name']
-
-        id_player = int(player['ID'])
-
-        data = api(id_player, mes)
-
-
-        nome_lista.append(name_player)
+            print("Carregando" f' {len(contador)} do total de {total}')
 
 
-        id_lista.append(id_player)
+            name_player = player['name']
 
-        mes_lista.append(mes)
+            id_player = int(player['ID'])
 
-
-        kdr_response = kdr(data)
-        kdr_lista.append(kdr_response)
+            data = api(id_player, mes)
 
 
-        adr_response = adr(data)
-        adr_lista.append(adr_response)
+            nome_lista.append(name_player)
 
 
-        matou_response = matou(data)
-        matou_lista.append(matou_response)
+            id_lista.append(id_player)
 
-        morreu_response = morreu(data)
-        morreu_lista.append(morreu_response)
-
-        multi_kills_response = multi_kills(data)
-        multikills_lista.append(multi_kills_response)
+            mes_lista.append(mes)
 
 
-        firstkills_response = first_kills(data)
-        firstkills_lista.append(firstkills_response)
-
-        headshot_response = headshot_rate(data)
-        headshot_list.append(headshot_response)
-
-        bombas_plantadas_response = bombas_plantadas(data)
-        bombplanted_list.append(bombas_plantadas_response)
+            kdr_response = kdr(data)
+            kdr_lista.append(kdr_response)
 
 
-        bombas_defusadas_response = bombas_defusadas(data)
-        bombdefused_lista.append(bombas_defusadas_response)
-
-        
-        matches_response = partidas(data)[3]
-        matches_lista.append(matches_response)
+            adr_response = adr(data)
+            adr_lista.append(adr_response)
 
 
-lista_de_tuplas = list(zip(mes_lista, id_lista, nome_lista, kdr_lista, adr_lista , matou_lista, morreu_lista, multikills_lista, firstkills_lista, headshot_list, bombplanted_list, bombdefused_lista, matches_lista))
-df = pd.DataFrame(lista_de_tuplas, columns=['mes', 'id', 'nome', 'kdr', 'adr', 'matou', 'morreu', 'multikills', 'firstkills', 'headshotrate', 'bomb_planted', 'bomb_defused', 'matches']) 
-df['headshotrate'] = df['headshotrate'].str.replace('%', '').astype(float)
-df['bomb_planted'] = df['bomb_planted'].str.replace('%', '').astype(int)
-df['bomb_defused'] = df['bomb_defused'].str.replace('%', '').astype(int)
-df.fillna(0, inplace=True)
+            matou_response = matou(data)
+            matou_lista.append(matou_response)
 
-df = df.astype({'mes':'datetime64[ns]', 'id':'int', 'nome':'string', 'kdr':'float64', 'adr': 'float64', 'matou' :'int', 'morreu' : 'int', 'multikills': 'int', 'firstkills' : 'int', 'headshotrate' : 'float', 'bomb_planted':'int', 'bomb_defused':'int', 'matches':'int'})
+            morreu_response = morreu(data)
+            morreu_lista.append(morreu_response)
 
-df["killsPerMap"] = df["matou"]/df["matches"].round(2)
-df["deatchsPerMap"] = df["morreu"]/df["matches"].round(2)
-df["firstKillsPerMap"] = df["firstkills"]/df["matches"].round(2)
-df["bombPlantedPerMap"] = df["bomb_planted"]/df["matches"].round(2)
-df["bombDefusedPerMap"] = df["bomb_defused"]/df["matches"].round(2)
+            multi_kills_response = multi_kills(data)
+            multikills_lista.append(multi_kills_response)
 
 
-print(df)
+            firstkills_response = first_kills(data)
+            firstkills_lista.append(firstkills_response)
 
-df.to_excel("teste_gc.xlsx")
+            headshot_response = headshot_rate(data)
+            headshot_list.append(headshot_response)
 
-# ... existing code ...
+            bombas_plantadas_response = bombas_plantadas(data)
+            bombplanted_list.append(bombas_plantadas_response)
 
-# List of metrics to generate graphs
+
+            bombas_defusadas_response = bombas_defusadas(data)
+            bombdefused_lista.append(bombas_defusadas_response)
+
+            
+            matches_response = partidas(data)[3]
+            matches_lista.append(matches_response)
 
 
+    lista_de_tuplas = list(zip(mes_lista, id_lista, nome_lista, kdr_lista, adr_lista, 
+                              matou_lista, morreu_lista, multikills_lista, firstkills_lista, 
+                              headshot_list, bombplanted_list, bombdefused_lista, matches_lista))
+    
+    df = pd.DataFrame(lista_de_tuplas, columns=['mes', 'id', 'nome', 'kdr', 'adr', 'matou', 
+                                               'morreu', 'multikills', 'firstkills', 'headshotrate', 
+                                               'bomb_planted', 'bomb_defused', 'matches'])
+    
+    # Clean and transform the data
+    df['headshotrate'] = df['headshotrate'].str.replace('%', '').astype(float)
+    df['bomb_planted'] = df['bomb_planted'].str.replace('%', '').astype(int)
+    df['bomb_defused'] = df['bomb_defused'].str.replace('%', '').astype(int)
+    df.fillna(0, inplace=True)
+
+    # Convert types
+    df = df.astype({
+        'mes': 'datetime64[ns]',
+        'id': 'int',
+        'nome': 'string',
+        'kdr': 'float64',
+        'adr': 'float64',
+        'matou': 'int',
+        'morreu': 'int',
+        'multikills': 'int',
+        'firstkills': 'int',
+        'headshotrate': 'float',
+        'bomb_planted': 'int',
+        'bomb_defused': 'int',
+        'matches': 'int'
+    })
+
+    # Calculate additional metrics
+    df["killsPerMap"] = (df["matou"]/df["matches"]).round(2)
+    df["deatchsPerMap"] = (df["morreu"]/df["matches"]).round(2)
+    df["firstKillsPerMap"] = (df["firstkills"]/df["matches"]).round(2)
+    df["bombPlantedPerMap"] = (df["bomb_planted"]/df["matches"]).round(2)
+    df["bombDefusedPerMap"] = (df["bomb_defused"]/df["matches"]).round(2)
+
+    progress_bar.empty()  # Clear the progress bar when done
+    return df
+
+
+if __name__ == "__main__":
+    df = get_data()
+    print(df)
