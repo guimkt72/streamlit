@@ -5,17 +5,15 @@ from main_gc import get_data
 # Add caching to prevent reloading data on every interaction
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def load_data():
-    # Show loading message
-    with st.spinner('Fetching data from API... This might take a minute...'):
-        try:
-            df = get_data()  # Your API function from main_gc.py
-            return df
-        except Exception as e:
-            st.error(f"Error loading data: {str(e)}")
-            # Add more detailed error logging
-            st.error(f"Error type: {type(e).__name__}")
-            st.error(f"Full error details: {e.__dict__}")
+    try:
+        df = get_data()  # Now reading from Excel file
+        if df is None or df.empty:
+            st.error("Could not load data from Excel file")
             return None
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        return None
 
 # Initialize session state for data if not exists
 if 'data' not in st.session_state:
@@ -46,7 +44,12 @@ if st.session_state.data is not None:
         'Headshot Rate': 'headshotrate',
         'Bombs Planted': 'bomb_planted',
         'Bombs Defused': 'bomb_defused',
-        'Matches Played': 'matches'
+        'Matches Played': 'matches',
+        'Kills Per Map': 'killsPerMap',
+        'Deaths Per Map': 'deatchsPerMap',
+        'First Kills Per Map': 'firstKillsPerMap',
+        'Bombs Planted Per Map': 'bombPlantedPerMap',
+        'Bombs Defused Per Map': 'bombDefusedPerMap'
     }
 
     # Let user select the metric to analyze with friendly names
